@@ -8,7 +8,7 @@ my %WriteMakefileArgs = (
     AUTHOR           => q{Robert Moore <robert@r-moore.tech>},
     VERSION_FROM     => 'lib/Reactive/Core.pm',
     ABSTRACT_FROM    => 'lib/Reactive/Core.pm',
-    LICENSE          => 'artistic_2',
+    LICENSE          => 'perl',
     MIN_PERL_VERSION => '5.006',
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => '0',
@@ -17,8 +17,21 @@ my %WriteMakefileArgs = (
         'Test::More' => '0',
     },
     PREREQ_PM => {
-        #'ABC'              => '1.6',
-        #'Foo::Bar::Module' => '5.0401',
+        'Moo'                       => '0',
+        'Type::Tiny'                => '0',
+
+        'DateTime'                  => '0',
+        'DateTime::Format::ISO8601' => '0',
+
+        'namespace::clean'          => '0',
+
+        'Module::Load'              => '0',
+        'Module::Loader'            => '0',
+        'Module::Installed::Tiny'   => '0',
+
+        'JSON::MaybeXS'             => '0',
+
+        'Data::Printer'             => '0',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Reactive-Core-*' },
