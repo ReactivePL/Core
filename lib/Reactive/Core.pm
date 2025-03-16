@@ -13,7 +13,7 @@ use Data::Printer;
 use Module::Load;
 use Module::Loader;
 
-use Reactive::JSONRenderer;
+use Reactive::Core::JSONRenderer;
 
 use Module::Installed::Tiny qw(module_source);
 use Digest::SHA qw(sha256_hex);
@@ -23,7 +23,7 @@ has template_renderer => (is => 'ro', isa => InstanceOf['Reactive::TemplateRende
 has component_namespaces => (is => 'ro', isa => ArrayRef[Str]);
 
 has component_map => (is => 'lazy', isa => HashRef[Str]);
-has json_renderer => (is => 'lazy', isa => InstanceOf['Reactive::JSONRenderer']);
+has json_renderer => (is => 'lazy', isa => InstanceOf['Reactive::Core::JSONRenderer']);
 
 =head1 NAME
 
@@ -258,9 +258,7 @@ sub _build_component_map {
     my %result;
 
     foreach my $ns (@{$self->component_namespaces}) {
-        printf "Checking namespace $ns\n";
         foreach my $component ($loader->find_modules($ns)) {
-            printf "Found component $component\n";
             $loader->load($component);
 
             my $name = $component;
@@ -274,7 +272,7 @@ sub _build_component_map {
 }
 
 sub _build_json_renderer {
-    return ReactivePL::JSONRenderer->new();
+    return Reactive::Core::JSONRenderer->new();
 }
 
 =head1 AUTHOR

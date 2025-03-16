@@ -1,4 +1,4 @@
-package Reactive::JSONRenderer;
+package Reactive::Core::JSONRenderer;
 
 use warnings;
 use strict;
@@ -6,7 +6,7 @@ use strict;
 use Moo;
 
 use Types::Standard qw( is_Bool is_Str is_Num is_HashRef is_ArrayRef InstanceOf );
-use Reactive::Types qw( is_Boolean is_DateTime is_DBIx is_SerializedDBIx to_SerializedDBIx);
+use Reactive::Core::Types qw( is_Boolean is_DateTime is_DBIx is_SerializedDBIx to_SerializedDBIx);
 
 use DateTime::Format::ISO8601;
 use JSON::MaybeXS;
@@ -65,5 +65,58 @@ sub _build_canonical_json {
 
     return JSON::MaybeXS->new(utf8 => 1, canonical => 1);
 }
+
+=head1 AUTHOR
+
+Robert Moore, C<< <robert at r-moore.tech> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C<bug-reactive-core at rt.cpan.org>, or through
+the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Reactive-Core>.  I will be notified, and then you'll
+automatically be notified of progress on your bug as I make changes.
+
+
+
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Reactive::Core
+
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN's request tracker (report bugs here)
+
+L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=Reactive-Core>
+
+=item * CPAN Ratings
+
+L<https://cpanratings.perl.org/d/Reactive-Core>
+
+=item * Search CPAN
+
+L<https://metacpan.org/release/Reactive-Core>
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+
+=head1 LICENSE AND COPYRIGHT
+
+This software is Copyright (c) 2025 by Robert Moore.
+
+This is free software, licensed under:
+
+  The Artistic License 2.0 (GPL Compatible)
+
+
+=cut
 
 1;
