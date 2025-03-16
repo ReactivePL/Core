@@ -48,7 +48,7 @@ sub inject_attribute {
 }
 
 sub _build_json_renderer {
-    return ReactivePL::Core::JSONRenderer->new();
+    return Reactive::Core::JSONRenderer->new();
 }
 
 =head1 AUTHOR

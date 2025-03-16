@@ -19,7 +19,7 @@ use Module::Installed::Tiny qw(module_source);
 use Digest::SHA qw(sha256_hex);
 
 has secret => (is => 'ro', isa => Str);
-has template_renderer => (is => 'ro', isa => InstanceOf['Reactive::TemplateRenderer']);
+has template_renderer => (is => 'ro', isa => InstanceOf['Reactive::Core::TemplateRenderer']);
 has component_namespaces => (is => 'ro', isa => ArrayRef[Str]);
 
 has component_map => (is => 'lazy', isa => HashRef[Str]);
