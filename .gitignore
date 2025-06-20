@@ -14,3 +14,5 @@ pod2htm*.tmp
 pm_to_blib
 Reactive-Core-*
 Reactive-Core-*.tar.gz
+
+lib/Reactive/Mojo
