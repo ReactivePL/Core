@@ -31,11 +31,11 @@ Reactive::Core - The great new Reactive::Core!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.10
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.10';
 
 
 =head1 SYNOPSIS
@@ -83,32 +83,29 @@ sub process_request {
     my $component = $self->_from_snapshot($payload->{snapshot});
 
     if (my $method = $payload->{callMethod}) {
-        $self->_call_method($component, $method);
+        $component->r_process_method_call($method);
     }
 
     if (my $update = $payload->{updateProperty}) {
-        $self->_update_property($component, @{$update});
+        $component->r_process_update_property(@{$update});
     }
 
     if (my $increment = $payload->{increment}) {
-        $self->_update_property(
-            $component,
+        $component->r_process_update_property(
             $increment,
             $payload->{snapshot}{data}{$increment} + 1
         );
     }
 
     if (my $decrement = $payload->{decrement}) {
-        $self->_update_property(
-            $component,
+        $component->r_process_update_property(
             $decrement,
             $payload->{snapshot}{data}{$decrement} - 1
         );
     }
 
     if (my $unset = $payload->{unset}) {
-        $self->_update_property(
-            $component,
+        $component->r_process_update_property(
             $unset,
             undef
         );
@@ -134,55 +131,6 @@ sub _initialize_component {
     return $component;
 }
 
-sub _get_property_names {
-    my $self = shift;
-    my $component = shift;
-
-    my $component_class = $component;
-    if (ref $component) {
-        $component_class = blessed $component;
-    }
-
-    my @keys = keys(%{
-        'Moo'->_constructor_maker_for($component_class)->all_attribute_specs
-    });
-
-    return @keys;
-}
-
-sub _get_properties {
-    my $self = shift;
-    my $component = shift;
-
-    my @keys = $self->_get_property_names($component);
-
-    my %properties = map { $_ => $component->$_ } @keys;
-
-    return %properties;
-}
-
-sub _get_component_name {
-    my $self = shift;
-    my $component = shift;
-
-    my $name = blessed $component;
-    $name =~ s/.*:://gi;
-
-    return $name;
-}
-
-sub _snapshot_data {
-    my $self = shift;
-    my $component = shift;
-
-    my %properties = $self->_get_properties($component);
-
-    return {
-        component => $self->_get_component_name($component),
-        data => \%properties,
-    };
-}
-
 sub _from_snapshot {
     my $self = shift;
     my $snapshot = shift;
@@ -203,13 +151,24 @@ sub _to_snapshot {
     my $self = shift;
     my $component = shift;
 
-    my %properties = $self->_get_properties($component);
+    my %properties = $component->r_get_properties();
 
-    my $template = $component->render;
+    my ($render_type, $template) = ($component->render);
 
-    my $html = $self->template_renderer->render($template, %properties, self => $component);
+    if (!$template) {
+        # if $component->render just returns a string use that as the template
+        $template = $render_type;
+        # and then try to work out the type based on whether it starts with a html tag or not
+        if ($template =~ /^\s*</g || $template =~ /\n/g) {
+            $render_type = Reactive::Core::TemplateRenderer::RENDER_TEMPLATE_INLINE();
+        } else {
+            $render_type = Reactive::Core::TemplateRenderer::RENDER_TEMPLATE_FILE();
+        }
+    }
 
-    my $snapshot = $self->_snapshot_data($component);
+    my $html = $self->template_renderer->render($render_type, $template, %properties, self => $component);
+
+    my $snapshot = $component->r_snapshot_data();
     $snapshot = $self->json_renderer->process_data($snapshot);
 
     $snapshot->{checksum} = $self->_generate_checksum($snapshot);
@@ -228,27 +187,6 @@ sub _generate_checksum {
     my $secret_digest = sha256_hex($self->secret);
 
     return sha256_hex(sprintf '%s:%s:%s', $module_src_digest, $snapshot_digest, $secret_digest);
-}
-
-sub _call_method {
-    my $self = shift;
-    my $component = shift;
-    my $method = shift;
-
-    $component->$method();
-}
-
-sub _update_property {
-    my $self = shift;
-    my $component = shift;
-    my $property = shift;
-    my $value = shift;
-
-    $component->$property($value);
-
-    if ($component->can('updated')) {
-        $component->updated($property);
-    }
 }
 
 sub _build_component_map {

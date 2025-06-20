@@ -9,14 +9,20 @@ use Types::Standard qw(InstanceOf);
 
 use Reactive::Core::JSONRenderer;
 
+use constant {
+    RENDER_TEMPLATE_FILE => 'File',
+    RENDER_TEMPLATE_INLINE => 'Inline',
+};
+
 has json_renderer => (is => 'lazy', isa => InstanceOf['Reactive::Core::JSONRenderer']);
 
 sub render {
     my $self = shift;
+    my $type = shift;
     my $template = shift;
     my %paramters = @_;
 
-    die "Method `->render(\$template, \%args)` must be overridden in subclass. $self";
+    die "Method `->render(\$type, \$template, \%args)` must be overridden in subclass. $self";
 }
 
 sub escape {

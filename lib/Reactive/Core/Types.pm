@@ -11,6 +11,7 @@ use Type::Library -extends => [ 'Types::Standard' ], -declare => qw/
     Boolean
     DBIx
     SerializedDBIx
+    DBIxProxy
 /;
 
 use Type::Tiny::Class;
@@ -18,6 +19,8 @@ use Types::TypeTiny qw/BoolLike/;
 
 use Type::Utils qw( assert );
 use Scalar::Util 'blessed';
+
+use Reactive::Core::Utils::DBIxProxy;
 
 use constant ISO8601_REGEX => qr{(\d{4}-[01]\d-[0-3]\d)T[0-2]\d:[0-5]\d:[0-5]\d(\.\d+)?([+-][0-2]\d:[0-5]\d|Z)};
 
@@ -59,6 +62,63 @@ $serialized_dbix->coercion->add_type_coercions(
             summary => $_->can('short_summary') ? $_->short_summary : {},
         };
     },
+    DBIxProxy, sub {
+        return {
+            model => $_->_model,
+            id => $_->_id,
+            summary => $_->_summary,
+        };
+    },
+);
+
+my $dbix_proxy = __PACKAGE__->add_type(
+    name => 'DBIxProxy',
+    parent => InstanceOf['Reactive::Core::Utils::DBIxProxy'],
+
+    constraint_generator => sub {
+        my $model = shift;
+        assert_Str $model;
+        # needs to return a coderef to use as a constraint for the
+        # parameterized type
+        return sub { $_->_model eq $model };
+    },
+
+    # probably the most complex bit
+    coercion_generator => sub {
+        my ( $parent_type, $child_type, $model ) = @_;
+
+        require Type::Coercion;
+        return Type::Coercion->new(
+            type_coercion_map => [
+                Num | Str, sub {
+                    return Reactive::Core::Utils::DBIxProxy->new(
+                        _id => $_,
+                        _model => $model,
+                    );
+                },
+                $serialized_dbix, sub {
+                    return Reactive::Core::Utils::DBIxProxy->new(
+                        _id => $_->{id},
+                        _model => $_->{model},
+                        _summary => $_->{summary},
+                    );
+                },
+                DBIx, sub {
+                    return Reactive::Core::Utils::DBIxProxy->new(
+                        _instance => $_,
+                    );
+                },
+            ],
+        );
+    },
+);
+
+$dbix_proxy->coercion->add_type_coercions(
+    DBIx, sub {
+        return Reactive::Core::Utils::DBIxProxy->new(
+            _instance => $_,
+        );
+    },
 );
 
 my $dbix = __PACKAGE__->add_type(
@@ -76,29 +136,22 @@ my $dbix = __PACKAGE__->add_type(
     # probably the most complex bit
     coercion_generator => sub {
         my ( $parent_type, $child_type, $model ) = @_;
-        my $schema = dbic_schema();
+
+        my $proxy = $dbix_proxy->of($model);
 
         require Type::Coercion;
         return Type::Coercion->new(
             type_coercion_map => [
-                Num | Str, sub {
-                    return $schema->resultset($model)->find($_);
+                $dbix_proxy, sub {
+                    return $_->_instance;
                 },
-                $serialized_dbix, sub {
-                    return $schema->resultset($model)->find($_->{id});
+                $proxy->coercibles & ~DBIx, sub {
+                    return $proxy->coerce($_)->_instance;
                 },
             ],
         );
     },
 );
-
-$dbix->coercion->add_type_coercions(
-    $serialized_dbix, sub {
-        return dbic_schema()->resultset($_->{model})->find($_->{id});
-    },
-);
-
-sub dbic_schema { die '`dbic_schema` must be overridden for DBIx coercions to work' }
 
 =head1 AUTHOR
 
