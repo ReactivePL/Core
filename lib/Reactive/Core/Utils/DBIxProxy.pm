@@ -16,6 +16,10 @@ has _summary     => (is => 'lazy', clearer   => 1, isa => HashRef);
 has _instance    => (is => 'lazy', predicate => 1, isa => Maybe[InstanceOf['DBIx::Class::Core']]);
 has _schema      => (is => 'lazy', predicate => 1, isa => InstanceOf['DBIx::Class::Schema']);
 
+
+=head2 dbic_schema($model)
+
+=cut
 sub dbic_schema { die '`*Reactive::Core::Utils::DBIxProxy::dbic_schema` must be overridden for DBIx coercions to work correctly' }
 
 sub _build__schema {
@@ -49,7 +53,7 @@ sub _build__model {
         return blessed $self->_instance;
     }
     # TODO: should probably throw some kind of exception here
-    return undef;
+    return;
 }
 
 sub _build__id {
@@ -59,7 +63,7 @@ sub _build__id {
         return $self->_instance->id;
     }
     # TODO: should probably throw some kind of exception here
-    return undef;
+    return;
 }
 
 sub _build__summary {

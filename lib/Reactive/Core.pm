@@ -18,8 +18,19 @@ use Reactive::Core::JSONRenderer;
 use Module::Installed::Tiny qw(module_source);
 use Digest::SHA qw(sha256_hex);
 
+=head2 secret
+
+=cut
 has secret => (is => 'ro', isa => Str);
+
+=head2 template_renderer
+
+=cut
 has template_renderer => (is => 'ro', isa => InstanceOf['Reactive::Core::TemplateRenderer']);
+
+=head2 component_namespaces
+
+=cut
 has component_namespaces => (is => 'ro', isa => ArrayRef[Str]);
 
 has component_map => (is => 'lazy', isa => HashRef[Str]);

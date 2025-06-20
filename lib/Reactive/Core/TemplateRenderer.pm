@@ -16,6 +16,24 @@ use constant {
 
 has json_renderer => (is => 'lazy', isa => InstanceOf['Reactive::Core::JSONRenderer']);
 
+=head2 render($self, $type, $template, %properties)
+    This method is not expected to be called directly via userland code
+    but instead will be called by Reactive::Core->_to_snapshot
+
+    This method must be overridden with a renderer specific implemenation, for example see Reactive::Mojo implementation
+
+    $type may be 'File' or 'Inline' (RENDER_TEMPLATE_FILE | RENDER_TEMPLATE_INLINE)
+
+    if 'File' then $template will be the path to the file
+    if 'Inline' then $template will be the inline template
+
+    %parameters will be the data that should be passed to the template
+    it will always include a key of 'self' which will be the component object
+    it will also include any data returned by $component->r_get_properties
+    which by default will include all public properties on the component
+
+    this method should return a string of html
+=cut
 sub render {
     my $self = shift;
     my $type = shift;
@@ -25,6 +43,16 @@ sub render {
     die "Method `->render(\$type, \$template, \%args)` must be overridden in subclass. $self";
 }
 
+=head2 escape($self, $string)
+    This method is not expected to be called directly via userland code
+    but instead will be called by Reactive::Core::TemplateRenderer->inject_attribute
+
+    will convert special characters in the string passed to their html entity equivilent
+    eg '<' => '&lt;'
+
+    should be overriden by the framework specific plugin,
+    eg Reactive::Mojo::TemplateRenderer overrides this with Mojo::Util->xml_escape
+=cut
 sub escape {
     my $self = shift;
     my $string = shift;
@@ -32,6 +60,16 @@ sub escape {
     die "Method `->escape(\$string)` must be overridden in subclass. $self";
 }
 
+=head2 inject_snapshot($self, $html, $snapshot)
+    This method is not expected to be called directly via userland code
+    but instead will be called by Reactive::Core->initial_render
+
+    $html will be the string returned from ->render
+    $snapshot will be a HashRef containing various data about the state of the component
+
+    this method will embed that snapshot data into a `reactive:snapshot` attribute on the
+    root node of the html
+=cut
 sub inject_snapshot {
     my $self = shift;
     my $html = shift;
@@ -40,6 +78,19 @@ sub inject_snapshot {
     return $self->inject_attribute($html, 'reactive:snapshot', $snapshot);
 }
 
+=head2 inject_attribute($self, $html, $attribute, $value)
+    This method is not expected to be called directly via userland code
+    but instead will be called by ->inject_snapshot
+
+    $html will be the string returned from ->render
+    $attribute will be a string with the attribute name
+    $value will be a HashRef containing various data about the state of the component
+
+    this method will json encode the value and embed the result into the root node of the
+    html as $attribute
+
+    it will then return the resulting string of html
+=cut
 sub inject_attribute {
     my $self = shift;
     my $html = shift;

@@ -7,6 +7,9 @@ use Scalar::Util 'blessed';
 
 use Reactive::Core::TemplateRenderer;
 
+=head2 allow_method_call
+
+=cut
 sub allow_method_call {
     my $self = shift;
     my $method = shift;
@@ -25,6 +28,9 @@ sub allow_method_call {
     return 1;
 }
 
+=head2 allow_property_update
+
+=cut
 sub allow_property_update {
     my $self = shift;
     my $property = shift;
@@ -47,6 +53,9 @@ sub allow_property_update {
     return 0;
 }
 
+=head2 r_process_method_call
+
+=cut
 sub r_process_method_call {
     my $self = shift;
     my $method = shift;
@@ -56,6 +65,9 @@ sub r_process_method_call {
     $self->$method();
 }
 
+=head2 r_process_update_property
+
+=cut
 sub r_process_update_property {
     my $self = shift;
     my $property = shift;
@@ -68,6 +80,9 @@ sub r_process_update_property {
     }
 }
 
+=head2 r_get_property_names
+
+=cut
 sub r_get_property_names {
     my $self = shift;
 
@@ -83,6 +98,9 @@ sub r_get_property_names {
     return @keys;
 }
 
+=head2 r_get_properties
+
+=cut
 sub r_get_properties {
     my $self = shift;
 
@@ -93,6 +111,9 @@ sub r_get_properties {
     return %properties;
 }
 
+=head2 r_get_component_name
+
+=cut
 sub r_get_component_name {
     my $self = shift;
 
@@ -102,6 +123,9 @@ sub r_get_component_name {
     return $name;
 }
 
+=head2 r_snapshot_data
+
+=cut
 sub r_snapshot_data {
     my $self = shift;
 
@@ -113,6 +137,9 @@ sub r_snapshot_data {
     };
 }
 
+=head2 render_template_file
+
+=cut
 sub render_template_file {
     my $self = shift;
     my $template = shift;
@@ -123,6 +150,9 @@ sub render_template_file {
     );
 }
 
+=head2 render_template_inline
+
+=cut
 sub render_template_inline {
     my $self = shift;
     my $template = shift;

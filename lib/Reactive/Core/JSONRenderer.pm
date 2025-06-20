@@ -14,6 +14,12 @@ use JSON::MaybeXS;
 has json => (is => 'lazy', isa => InstanceOf[qw/Cpanel::JSON::XS JSON::XS JSON::PP/]);
 has canonical_json => (is => 'lazy', isa => InstanceOf[qw/Cpanel::JSON::XS JSON::XS JSON::PP/]);
 
+=head2 render($self, HashRef $data)
+    This method is not expected to be called directly via userland code
+    but instead will be called by Reactive::Core::TemplateRenderer->inject_attribute
+
+    returns json encoded $data after first handling some common types
+=cut
 sub render {
     my $self = shift;
     my $data = shift;
@@ -23,6 +29,19 @@ sub render {
     return $self->json->encode($processed);
 }
 
+=head2 process_data($self, HashRef $data)
+    This method is not expected to be called directly via userland code
+    but instead will be called by ->render
+
+    recursively iterates through $data performing some type conversions
+    to allow json encoding to work more smoothly
+
+    most notably
+    DateTime objects will be encoded as full ISO8601 strings with timezone info
+    DBIx::Class objects will be serialized in a way that minimizes the data while also allowing them to work nicely in components
+
+    returns a HashRef with same keys as $data but with the converted values
+=cut
 sub process_data {
     my $self = shift;
     my $data = shift;
