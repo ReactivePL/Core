@@ -15,4 +15,6 @@ pm_to_blib
 Reactive-Core-*
 Reactive-Core-*.tar.gz
 
+local
+
 lib/Reactive/Mojo
