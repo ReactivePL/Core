@@ -41,16 +41,23 @@ sub allow_property_update {
     return 0 if $property =~ /^_/;
     return 0 if $property =~ /^[A-Z]*$/;
 
-    my ($root, $index) = $self->_split_property_and_index($property);
+    my ($root, $index, $sub) = $self->_split_property_and_index($property);
 
     if ($self->can('allowed_properties')) {
-        my $check = $property;
+        my $check = $root;
+
         if (defined $index) {
-            $check = $root . '[]';
+            $check .= '[]';
         }
+
+        if (defined $sub) {
+            $check .= ".$sub";
+        }
+
         for my $p ($self->allowed_properties) {
             return 1 if $check eq $p;
         }
+
         return 0;
     }
 
@@ -87,12 +94,20 @@ sub r_process_update_property {
     my $arg = shift;
     my $value = shift;
 
-    my ($property, $index) = $self->_split_property_and_index($arg);
+    my ($property, $index, $sub) = $self->_split_property_and_index($arg);
 
-    if (defined $index) {
-        $self->$property->[$index] = $value;
+    if (defined $sub) {
+        if (defined $index) {
+            $self->$property->[ $index ]->{ $sub } = $value;
+        } else {
+            $self->$property->{ $sub } = $value;
+        }
     } else {
-        $self->$property($value);
+        if (defined $index) {
+            $self->$property->[$index] = $value;
+        } else {
+            $self->$property($value);
+        }
     }
 
 
@@ -188,9 +203,9 @@ sub _split_property_and_index {
     my $self = shift;
     my $arg = shift;
 
-    my ($property, $index) = $arg =~ /^([A-Z]*)(?:\[(\d+)\])?$/i;
+    my ($property, $index, $subproperty) = $arg =~ /^([A-Z]*)(?:\[(\d+)\])?(?:\.([A-Z]+))?$/i;
 
-    return ($property, $index);
+    return ($property, $index, $subproperty);
 }
 
 1;
