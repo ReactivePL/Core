@@ -4,8 +4,10 @@ use warnings;
 use strict;
 
 use Scalar::Util 'blessed';
+use Types::TypeTiny qw( is_ArrayLike );
 
 use Reactive::Core::TemplateRenderer;
+
 
 =head2 allow_method_call
 
@@ -39,15 +41,27 @@ sub allow_property_update {
     return 0 if $property =~ /^_/;
     return 0 if $property =~ /^[A-Z]*$/;
 
+    my ($root, $index) = $self->_split_property_and_index($property);
+
     if ($self->can('allowed_properties')) {
+        my $check = $property;
+        if (defined $index) {
+            $check = $root . '[]';
+        }
         for my $p ($self->allowed_properties) {
-            return 1 if $property eq $p;
+            return 1 if $check eq $p;
         }
         return 0;
     }
 
     for my $p ($self->r_get_property_names) {
-        return 1 if $property eq $p;
+        if ($root eq $p) {
+            if (defined $index) {
+                return is_ArrayLike($self->$root);
+            }
+            return 1;
+        }
+
     }
 
     return 0;
@@ -70,10 +84,17 @@ sub r_process_method_call {
 =cut
 sub r_process_update_property {
     my $self = shift;
-    my $property = shift;
+    my $arg = shift;
     my $value = shift;
 
-    $self->$property($value);
+    my ($property, $index) = $self->_split_property_and_index($arg);
+
+    if (defined $index) {
+        $self->$property->[$index] = $value;
+    } else {
+        $self->$property($value);
+    }
+
 
     if ($self->can('updated')) {
         $self->updated($property);
@@ -161,6 +182,15 @@ sub render_template_inline {
         Reactive::Core::TemplateRenderer::RENDER_TEMPLATE_INLINE(),
         $template,
     );
+}
+
+sub _split_property_and_index {
+    my $self = shift;
+    my $arg = shift;
+
+    my ($property, $index) = $arg =~ /^([A-Z]*)(?:\[(\d+)\])?$/i;
+
+    return ($property, $index);
 }
 
 1;
